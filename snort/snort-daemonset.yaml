@@ -1,0 +1,37 @@
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: snort
+  labels:
+    app: snort
+spec:
+  selector:
+    matchLabels:
+      app: snort
+  template:
+    metadata:
+      labels:
+        app: snort
+    spec:
+      hostNetwork: true
+      containers:
+      - name: snort
+        image: sirisha1997/snort:latest
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: snort-logs
+          mountPath: /var/log/snort
+        env:
+        - name: INTERFACE
+          value: "eth0"
+        command: [ "sh", "-c", "snort -A console -q -c /etc/snort/snort.conf -i $INTERFACE" ]
+        tty: true
+        stdin: true
+      volumes:
+      - name: snort-logs
+        hostPath:
+          path: /var/log/snort
+      nodeSelector:
+        kubernetes.io/os: linux

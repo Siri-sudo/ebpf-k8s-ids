@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ebpf-monitor
+spec:
+  selector:
+    matchLabels:
+      name: ebpf-monitor
+  template:
+    metadata:
+      labels:
+        name: ebpf-monitor
+    spec:
+      hostNetwork: true
+      containers:
+        - name: ebpf-monitor
+          image: sirisha1997/ebpf-xdp:latest
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "ip link set dev eth0 xdp off"]
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: sys-fs-bpf
+              mountPath: /sys/fs/bpf
+              mountPropagation: Bidirectional
+            - name: lib-modules
+              mountPath: /lib/modules
+            - name: sys-kernel-debug
+              mountPath: /sys/kernel/debug
+      volumes:
+        - name: sys-fs-bpf
+          hostPath:
+            path: /sys/fs/bpf
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
+        - name: sys-kernel-debug
+          hostPath:
+            path: /sys/kernel/debug
